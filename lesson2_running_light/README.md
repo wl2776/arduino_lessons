@@ -1,0 +1,1 @@
+![схема](data/schematic.svg)

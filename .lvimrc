@@ -1,0 +1,6 @@
+let &l:makeprg="make -f ".g:localvimrc_script_dir."/Makefile"
+nnoremap <leader>r :make upload<CR>
+
+let g:ycm_filter_diagnostics = {
+            \ "cpp": {"regex": ["Compiler optimizations disabled; functions from .* won't work as designed"]}
+            \} 
