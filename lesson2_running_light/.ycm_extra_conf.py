@@ -1,29 +1,29 @@
 ﻿import logging
 from pathlib import Path
-import ycm_core
 
 DIR_OF_THIS_SCRIPT = Path( __file__ ).parent 
-SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.ino', '.m', '.mm' ]
 
-logger = logging.getLogger('ycm-extra-conf') 
-database = None
+# compilation database is created with command
+# pio run -t compiledb
+compilation_database_folder = DIR_OF_THIS_SCRIPT / '.pio/build/uno'
 
-# You can set a directory with a lot of libraries to be search recursively here
-lib_dirs_project = [
-   'lib'
-  ,'src'
-]
+if compilation_database_folder.exists():
+    try:
+        import ycm_core
+        database = ycm_core.CompilationDatabase(compilation_database_folder)
+    except ImportError:
+        database = None
 
 flags_general = [
    '-Wall'
   ,'-Wextra'
   ,'-Werror'
-
   ,'-Wno-attributes'
   ,'-std=c++17'
 ]
 
-compilation_database_folder = '.pio/build/uno/compile_commands.json'
+SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.ino', '.m', '.mm' ]
+
 
 
 def IsHeaderFile( filename ):
@@ -61,17 +61,10 @@ def GetCompilationInfoFromCLS():
 
 
 def Settings ( **kwargs ):
+    logger = logging.getLogger('ycm-extra-conf') 
     # logger.setLevel(logging.DEBUG)
     logger.debug(kwargs)
-    try: 
-        import ycm_core
-
-        global database
-        if database is None and (DIR_OF_THIS_SCRIPT / compilation_database_folder).exists() :
-            database = ycm_core.CompilationDatabase( str(DIR_OF_THIS_SCRIPT / compilation_database_folder ))
-    except ImportError:
-        ycm_core = None
-
+       
     language = kwargs[ 'language' ]
   
     if language == 'cfamily':
@@ -106,8 +99,12 @@ def Settings ( **kwargs ):
 
         # Bear in mind that compilation_info.compiler_flags_ does NOT return a
         # python list, but a "list-like" StringVec object.
-        final_flags = list( compilation_info.compiler_flags_ )
-        logger.debug(final_flags)
+        final_flags = list(filter(lambda f: f[0] == '-', compilation_info.compiler_flags_))
+        final_flags += return_flags
+
+        # remove duplicates
+        final_flags = [*{*final_flags}]
+        logger.debug('Final flags {}'.format(final_flags))
 
         return {
                 'flags': final_flags,
