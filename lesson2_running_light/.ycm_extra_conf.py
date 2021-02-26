@@ -5,14 +5,17 @@ DIR_OF_THIS_SCRIPT = Path( __file__ ).parent
 
 # compilation database is created with command
 # pio run -t compiledb
-compilation_database_folder = DIR_OF_THIS_SCRIPT / '.pio/build/uno'
+# last part of the path, 'uno', probably should be determined from 'platformio.ini'
+compilation_database_folder = DIR_OF_THIS_SCRIPT / '.pio' / ' build' / 'uno'
 
+database = None
 if compilation_database_folder.exists():
     try:
         import ycm_core
         database = ycm_core.CompilationDatabase(compilation_database_folder)
     except ImportError:
-        database = None
+        pass
+
 
 flags_general = [
    '-Wall'
@@ -25,9 +28,8 @@ flags_general = [
 SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.ino', '.m', '.mm' ]
 
 
-
 def IsHeaderFile( filename ):
-    return filename.suffix in [ '.h', '.hxx', '.hpp', '.hh' ]
+    return filename.suffix.lower() in [ '.h', '.hxx', '.hpp', '.hh' ]
 
 
 def FindCorrespondingSourceFile( filename ):
@@ -36,6 +38,9 @@ def FindCorrespondingSourceFile( filename ):
         for extension in SOURCE_EXTENSIONS:
             if filename.with_suffix(extension).exists():
                 return filename.with_suffix(extension)
+            if filename.with_suffix(extension.upper()).exists():
+                return filename.with_suffix(extension.upper())
+
     return filename
 
 
@@ -79,38 +84,35 @@ def Settings ( **kwargs ):
 
         include_flags, cflags, cxxflags = GetCompilationInfoFromCLS()
 
-        return_flags = flags_general + include_flags + (cflags if filename.suffix.lower == '.c' else cxxflags)
+        return_flags = flags_general + include_flags + (cflags if filename.suffix.lower() == '.c' else cxxflags)
+
+        settings = {
+                'include_paths_relative_to_dir': str(DIR_OF_THIS_SCRIPT.resolve()),
+                'override_filename': str(filename),
+                'do_cache': True
+                }
 
         if not database:
-            return {
-                    'flags': return_flags,
-                    'include_paths_relative_to_dir': str(DIR_OF_THIS_SCRIPT.resolve()),
-                    'override_filename': filename
-                    }
+            settings.update({'flags': return_flags})
+            return settings
 
         compilation_info = database.GetCompilationInfoForFile( str(filename) )
         if not compilation_info.compiler_flags_:
             logger.info('No compilation info for {} return flags from .ccls'.format(filename))
-            return {
-                    'flags': return_flags,
-                    'include_paths_relative_to_dir': str(DIR_OF_THIS_SCRIPT.resolve()),
-                    'override_filename': filename
-                    }
+            settings.update({'flags': return_flags})
+            return settings
 
-        # Bear in mind that compilation_info.compiler_flags_ does NOT return a
-        # python list, but a "list-like" StringVec object.
+        # compliler_flags_ is actually a list-like object, containing full command line for compiler 
+        # get only flags (starting from -)
         final_flags = list(filter(lambda f: f[0] == '-', compilation_info.compiler_flags_))
         final_flags += return_flags
 
         # remove duplicates
         final_flags = [*{*final_flags}]
-        logger.debug('Final flags {}'.format(final_flags))
 
-        return {
-                'flags': final_flags,
-                'include_paths_relative_to_dir': compilation_info.compiler_working_dir_,
-                'override_filename': filename
-                }
+        logger.debug('Final flags {}'.format(final_flags))
+        settings.update({'flags': final_flags})
+        return settings
 
 
 if __name__ == '__main__':
