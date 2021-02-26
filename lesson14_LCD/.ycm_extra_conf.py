@@ -1,20 +1,28 @@
 ﻿import logging
+import subprocess
+import json
 from pathlib import Path
 
-DIR_OF_THIS_SCRIPT = Path( __file__ ).parent 
+DIR_OF_THIS_SCRIPT = Path( __file__ ).parent
 
 # compilation database is created with command
 # pio run -t compiledb
 # last part of the path, 'uno', probably should be determined from 'platformio.ini'
-compilation_database_folder = DIR_OF_THIS_SCRIPT / '.pio' / ' build' / 'uno'
+compilation_database_folder = DIR_OF_THIS_SCRIPT / '.pio' / 'build' / 'uno'
+
+logger = logging.getLogger('ycm-extra-conf')
+logger.setLevel(logging.DEBUG)
 
 database = None
 if compilation_database_folder.exists():
+    logger.debug('Found compilation database at {}'.format(compilation_database_folder))
     try:
         import ycm_core
         database = ycm_core.CompilationDatabase(compilation_database_folder)
     except ImportError:
         pass
+else:
+    logger.warn('No compilation database at {}'.format(compilation_database_folder))
 
 
 flags_general = [
@@ -26,7 +34,6 @@ flags_general = [
 ]
 
 SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.ino', '.m', '.mm' ]
-
 
 def IsHeaderFile( filename ):
     return filename.suffix.lower() in [ '.h', '.hxx', '.hpp', '.hh' ]
@@ -48,7 +55,7 @@ def GetCompilationInfoFromCLS():
     include_flags = []
     cflags = []
     cxxflags = []
-    
+
     ccls_path = DIR_OF_THIS_SCRIPT / '.ccls'
     if ccls_path.exists():
         for l in ccls_path.open('rt'):
@@ -65,13 +72,26 @@ def GetCompilationInfoFromCLS():
     return include_flags, cflags, cxxflags
 
 
+def get_include_paths_for_installed_libs():
+    try:
+        res = subprocess.run(['pio', 'lib', 'list', '--json-output'], capture_output=True)
+        libs = json.loads(res.stdout)
+    except FileNotFoundError:
+        logger.warn('Could not run pio to get list of installed libs')
+        return []
+    except JSONDecodeError:
+        logger.warn('Invalid output from pio')
+        return []
+
+    logger.debug(libs)
+    return [l['__pkg_dir'] for l in libs]
+
+
 def Settings ( **kwargs ):
-    logger = logging.getLogger('ycm-extra-conf') 
-    # logger.setLevel(logging.DEBUG)
     logger.debug(kwargs)
-       
+
     language = kwargs[ 'language' ]
-  
+
     if language == 'cfamily':
       # If the file is a header, try to find the corresponding source file and
       # retrieve its flags from the compilation database if using one. This is
@@ -83,8 +103,10 @@ def Settings ( **kwargs ):
         logger.debug(filename)
 
         include_flags, cflags, cxxflags = GetCompilationInfoFromCLS()
+        dep_lib_incs = get_include_paths_for_installed_libs()
 
-        return_flags = flags_general + include_flags + (cflags if filename.suffix.lower() == '.c' else cxxflags)
+        return_flags = flags_general + include_flags + dep_lib_incs + (cflags if filename.suffix.lower() == '.c' else cxxflags)
+        logger.debug('return_flags: {}'.format(return_flags))
 
         settings = {
                 'include_paths_relative_to_dir': str(DIR_OF_THIS_SCRIPT.resolve()),
@@ -93,6 +115,7 @@ def Settings ( **kwargs ):
                 }
 
         if not database:
+            logger.debug('no database')
             settings.update({'flags': return_flags})
             return settings
 
@@ -102,7 +125,7 @@ def Settings ( **kwargs ):
             settings.update({'flags': return_flags})
             return settings
 
-        # compliler_flags_ is actually a list-like object, containing full command line for compiler 
+        # compliler_flags_ is actually a list-like object, containing full command line for compiler
         # get only flags (starting from -)
         final_flags = list(filter(lambda f: f[0] == '-', compilation_info.compiler_flags_))
         final_flags += return_flags
@@ -112,6 +135,7 @@ def Settings ( **kwargs ):
 
         logger.debug('Final flags {}'.format(final_flags))
         settings.update({'flags': final_flags})
+
         return settings
 
 
