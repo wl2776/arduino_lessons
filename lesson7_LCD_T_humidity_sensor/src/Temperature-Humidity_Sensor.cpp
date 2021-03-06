@@ -32,7 +32,7 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
-#include "dht11.h"
+#include <dht11.h>
 
 #define  DHT11PIN   8
 dht11 DHT11;
@@ -59,5 +59,8 @@ void loop() {
     lcd.print("Hum: ");
     lcd.print((float)DHT11.humidity, 2);
     lcd.print("%");
+
+    lcd.setCursor(13, 1);
+    lcd.print(chk);
     delay(200);
 }
