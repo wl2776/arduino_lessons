@@ -1,17 +1,16 @@
 #include <Arduino.h>
-#include <LiquidTWI2.h>
+#include <LiquidCrystal_I2C.h>
 #if DEBUG
 #include <avr8-stub.h>
 #endif
 
-LiquidTWI2 lcd(0x27);
+LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01); //, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
 
 void setup()
 {
 #if DEBUG
     debug_init();
 #endif
-    lcd.setMCPType(LTI_TYPE_MCP23008);
     lcd.begin(16, 2);
 
     lcd.setCursor(2, 0);  //go to start of 2nd line
@@ -26,8 +25,8 @@ void loop()
   // print the number of seconds since reset:
   lcd.print(millis()/1000);
 
-  lcd.setBacklight(HIGH);
+  lcd.backlight();
   delay(1000);
-  lcd.setBacklight(LOW);
+  lcd.noBacklight();
   delay(1000);    
 }
