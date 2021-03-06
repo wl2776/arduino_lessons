@@ -4,19 +4,43 @@
 #include <avr8-stub.h>
 #endif
 
-LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01); //, 4, 5, 6, 16, 11, 12, 13, 14, POSITIVE);
+#define BACKLIGHT_PIN     13
+
+LiquidCrystal_I2C lcd(0x27, 6, 5, 4);
+
+// Creat a set of new characters
+const uint8_t charBitmap[][8] = {
+   { 0xc, 0x12, 0x12, 0xc, 0, 0, 0, 0 },
+   { 0x6, 0x9, 0x9, 0x6, 0, 0, 0, 0 },
+   { 0x0, 0x6, 0x9, 0x9, 0x6, 0, 0, 0x0 },
+   { 0x0, 0xc, 0x12, 0x12, 0xc, 0, 0, 0x0 },
+   { 0x0, 0x0, 0xc, 0x12, 0x12, 0xc, 0, 0x0 },
+   { 0x0, 0x0, 0x6, 0x9, 0x9, 0x6, 0, 0x0 },
+   { 0x0, 0x0, 0x0, 0x6, 0x9, 0x9, 0x6, 0x0 },
+   { 0x0, 0x0, 0x0, 0xc, 0x12, 0x12, 0xc, 0x0 }
+};
 
 void setup()
 {
 #if DEBUG
     debug_init();
 #endif
-    lcd.begin(16, 2);
+    int charBitmapSize = (sizeof(charBitmap) / sizeof(charBitmap[0]));
 
-    lcd.setCursor(2, 0);  //go to start of 2nd line
-    lcd.print("Hello, world!");
-    lcd.setCursor(4, 1);  //go to start of 2nd line
-    lcd.print("Wl2776");
+    pinMode(BACKLIGHT_PIN, OUTPUT);
+    digitalWrite(BACKLIGHT_PIN, HIGH);
+
+    lcd.begin(16, 2); // initialize the lcd
+
+    // for (int i = 0; i < charBitmapSize; i++)
+    // {
+    //     lcd.createChar(i, (uint8_t *)charBitmap[i]);
+    // }
+
+    lcd.home(); // go home
+    lcd.print("Hello, ARDUINO ");
+    lcd.setCursor(0, 1); // go to the next line
+    lcd.print(" FORUM - fm   ");
 }
 
 void loop()
