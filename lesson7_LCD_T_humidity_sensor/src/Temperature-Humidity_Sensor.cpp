@@ -3,8 +3,9 @@
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
 
-#define DHTPIN   8
-#define DHTTYPE    DHT11
+const uint8_t DHTPIN = 8;
+const uint8_t DHTTYPE = DHT11;
+bool is_fahrenheit = false;
 
 DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
@@ -21,21 +22,16 @@ void loop() {
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     float h = dht.readHumidity();
-    // Read temperature as Celsius (the default)
-    float t = dht.readTemperature();
-    // Read temperature as Fahrenheit (isFahrenheit = true)
-    float f = dht.readTemperature(true);
+    float t = dht.readTemperature(is_fahrenheit);
 
-    if (isnan(h) || isnan(t) || isnan(f)) {
+    if (isnan(h) || isnan(t)) {
         Serial.println(F("Failed to read from DHT sensor!"));
         lcd.setCursor(13, 1);
         lcd.print('.');
     }
 
     lcd.setCursor(0, 0);
-    lcd.print("Temp: ");
-    lcd.print(t);
-    lcd.print("'C");
+    lcd.print(String("Temp: ") + t + String("'C"));
 
     lcd.setCursor(0, 1);
     lcd.print("Hum: ");
