@@ -31,36 +31,44 @@
 #include <Arduino.h>
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <DHT.h>
 
-#include <dht11.h>
+#define DHTPIN   8
+#define DHTTYPE    DHT11
 
-#define  DHT11PIN   8
-dht11 DHT11;
-
+DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
 
 void setup() {
-    pinMode(DHT11PIN, INPUT);
     lcd.begin(16, 2);
     lcd.backlight();
+    dht.begin();
+    delay(2000);
 }
 
 void loop() {
-    int chk = DHT11.read(DHT11PIN);
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+    // Read temperature as Fahrenheit (isFahrenheit = true)
+    float f = dht.readTemperature(true);
+
+    if (isnan(h) || isnan(t) || isnan(f)) {
+        lcd.setCursor(13, 1);
+        lcd.print('.');
+    }
+
     lcd.setCursor(0, 0);
     lcd.print("Temp: ");
-    lcd.print((float)DHT11.temperature);
+    lcd.print(t);
     lcd.print("'C");
 
-    // set the cursor to column 0, line 1
-    // (note: line 1 is the second row, since counting begins with 0):
     lcd.setCursor(0, 1);
-    // print the number of seconds since reset:
     lcd.print("Hum: ");
-    lcd.print((float)DHT11.humidity, 2);
+    lcd.print(h);
     lcd.print("%");
 
-    lcd.setCursor(13, 1);
-    lcd.print(chk);
-    delay(200);
+    delay(2000);
 }
