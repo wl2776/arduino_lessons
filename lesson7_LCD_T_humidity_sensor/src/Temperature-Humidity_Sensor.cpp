@@ -7,10 +7,17 @@ const uint8_t DHTPIN = 8;
 const uint8_t DHTTYPE = DHT11;
 bool is_fahrenheit = false;
 
+const int buttonPin = 2;     // номер входа, подключенный к кнопке
+const int ledPin =  13;      // номер выхода светодиода
+
+
 DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
 
 void setup() {
+    pinMode(ledPin, OUTPUT);
+    pinMode(buttonPin, INPUT_PULLUP);
+
     lcd.begin(16, 2);
     lcd.backlight();
     dht.begin();
@@ -31,12 +38,21 @@ void loop() {
     }
 
     lcd.setCursor(0, 0);
-    lcd.print(String("Temp: ") + t + String("'C"));
+    lcd.print(String("Temp: ") + t + ((is_fahrenheit) ? String("F ") : String("'C")));
 
     lcd.setCursor(0, 1);
     lcd.print("Hum: ");
     lcd.print(h);
     lcd.print("%");
 
+    int buttonState = digitalRead(buttonPin);
+    if (buttonState == HIGH) {
+        digitalWrite(ledPin, HIGH);
+        is_fahrenheit = !is_fahrenheit;
+    } else {
+        digitalWrite(ledPin, LOW);
+    }
+
     delay(200);
+
 }
