@@ -2,23 +2,31 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
+#include <Bounce2.h>
 
 const uint8_t DHTPIN = 8;
 const uint8_t DHTTYPE = DHT11;
-bool is_fahrenheit = false;
 
 const int buttonPin = 2;     // номер входа, подключенный к кнопке
 const int ledPin =  13;      // номер выхода светодиода
 
-
 DHT dht(DHTPIN, DHTTYPE);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
+Bounce2::Button button = Bounce2::Button();
 
+bool is_fahrenheit = false;
 unsigned long last_millis;
 
 void setup() {
     pinMode(ledPin, OUTPUT);
-    pinMode(buttonPin, INPUT_PULLUP);
+    digitalWrite(ledPin, LOW);
+
+    button.attach(buttonPin, INPUT); // USE EXTERNAL PULL-UP
+    // DEBOUNCE INTERVAL IN MILLISECONDS
+    button.interval(5);
+
+    // INDICATE THAT THE LOW STATE CORRESPONDS TO PHYSICALLY PRESSING THE BUTTON
+    button.setPressedState(LOW); 
 
     lcd.begin(16, 2);
     lcd.backlight();
@@ -52,11 +60,10 @@ void loop() {
         last_millis = millis();
     }
 
-    int buttonState = digitalRead(buttonPin);
-    if (buttonState == HIGH) {
-        digitalWrite(ledPin, HIGH);
+    button.update();
+    if (button.pressed()) {
         is_fahrenheit = !is_fahrenheit;
-    } else {
-        digitalWrite(ledPin, LOW);
     }
+    int button_state = digitalRead(buttonPin);
+    digitalWrite(ledPin, button_state);
 }
