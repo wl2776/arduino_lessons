@@ -29,26 +29,26 @@
  *         Arduino PIN 8   ===================  Temperature-Humidity Sensor Dout
  */
 #include <Arduino.h>
-#include "dht11.h"
 #include <Wire.h> 
-#include "LiquidCrystal_I2C.h"
+#include <LiquidCrystal_I2C.h>
+
+#include "dht11.h"
 
 #define  DHT11PIN   8
 dht11 DHT11;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
 
 void setup() {
-    pinMode(DHT11PIN,INPUT);
-    lcd.init();                      // initialize the lcd
-    // Print a message to the LCD.
+    pinMode(DHT11PIN, INPUT);
+    lcd.begin(16, 2);
     lcd.backlight();
 }
 
 void loop() {
     int chk = DHT11.read(DHT11PIN);
     lcd.setCursor(0, 0);
-    lcd.print("Tep: ");
+    lcd.print("Temp: ");
     lcd.print((float)DHT11.temperature);
     lcd.print("'C");
 
