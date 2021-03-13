@@ -11,33 +11,23 @@ plt.rcParams["axes.axisbelow"] = False
 matplotlib.rc('axes',edgecolor='w')
 from matplotlib.animation import FuncAnimation
 
-n_ticks = 20
-big_angle = 180/n_ticks  # How we split our polar space
-
-inner=10
-outer=30
-
-x_len = 200         # Number of points to display
-y_range = [0, 100]  # Range of possible Y values to display
-
+x_range = [-90, 90]
+y_range = [0, 300]
 
 def dress_axes(ax):
     ax.set_facecolor('w')
+    ax.set_thetamin(x_range[0])
+    ax.set_thetamax(x_range[1])
     ax.set_theta_zero_location("N")
-    ax.set_theta_direction(-1)
-    # Here is how we position the months labels
-
-    middles = np.arange(big_angle/2, 180, big_angle)*np.pi/180
-    ax.set_xticks(middles)
-    ax.set_xticklabels(middles)
+    ax.set_rlim(y_range)
 
 
-# Create figure for plotting
 fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-xs = list(range(0, 200))
-ys = [0] * x_len
-ax.set_ylim(y_range)
+ax = fig.add_subplot(1, 1, 1, polar=True)
+xs = np.arange(x_range[0], x_range[1], dtype=np.float)
+ys = np.zeros_like(xs, dtype=np.float)
+
+dress_axes(ax)
 
 line, = ax.plot(xs, ys)
 
@@ -48,15 +38,7 @@ def animate(i, ys):
     jstr = ser.readline().strip(b'\r\n ')
     data = json.loads(jstr)
     print(data)
-    distance = data['d']
-
-    # Add y to list
-    ys.append(distance)
-
-    # Limit y list to set number of items
-    ys = ys[-x_len:]
-
-    # Update line with new Y values
+    ys[data['a'] - x_range[0]] = data['d']
     line.set_ydata(ys)
 
     return line,
