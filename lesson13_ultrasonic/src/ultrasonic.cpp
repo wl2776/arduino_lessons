@@ -9,7 +9,6 @@ void setup()
     Serial.begin(9600);
     pinMode(TrigPin, OUTPUT);
     pinMode(EchoPin, INPUT);
-    Serial.println("Ultrasonic sensor:");
 }
 
 void loop()
@@ -20,9 +19,10 @@ void loop()
     delayMicroseconds(10);
     digitalWrite(TrigPin, LOW);
     distance = pulseIn(EchoPin, HIGH) / 58.00;
-    Serial.print("distance is :");
+    Serial.print("{\"d\":");
     Serial.print(distance);
-    Serial.print("cm");
-    Serial.println();
+    Serial.print(",\"a\":");
+    Serial.print(0);
+    Serial.println("}");
     delay(100);
 }
