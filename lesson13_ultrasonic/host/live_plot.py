@@ -11,21 +11,21 @@ plt.rcParams["axes.axisbelow"] = False
 matplotlib.rc('axes',edgecolor='w')
 from matplotlib.animation import FuncAnimation
 
-x_range = [-90, 90]
+x_range = [0, 180]
 y_range = [0, 300]
 
 def dress_axes(ax):
     ax.set_facecolor('w')
     ax.set_thetamin(x_range[0])
     ax.set_thetamax(x_range[1])
-    ax.set_theta_zero_location("N")
+    ax.set_theta_zero_location("E")
     ax.set_rlim(y_range)
 
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1, polar=True)
 xs = np.arange(x_range[0], x_range[1], dtype=np.float)
-ys = np.zeros_like(xs, dtype=np.float)
+ys = np.ones_like(xs, dtype=np.float)
 
 dress_axes(ax)
 
@@ -33,17 +33,29 @@ line, = ax.plot(xs, ys)
 
 ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600)
 
-# This function is called periodically from FuncAnimation
-def animate(i, ys):
+def animate(i, xs, ys):
+    # jstr = '{{"a": {}, "d": 50}}'.format(i)
     jstr = ser.readline().strip(b'\r\n ')
-    data = json.loads(jstr)
-    print(data)
-    ys[data['a'] - x_range[0]] = data['d']
-    line.set_ydata(ys)
 
+    try:
+        data = json.loads(jstr)
+        print(data)
+        index = data['a'] - x_range[0]
+        ys[index] = data['d']
+        xs[index] = data['a']
+        line.set_ydata(ys)
+        line.set_xdata(xs)
+    except json.decoder.JSONDecodeError:
+        pass
+    except IndexError:
+        pass
+    except UnicodeDecodeError:
+        pass
+    ax.clear()
+    dress_axes(ax)
     return line,
 
 
 if __name__ == '__main__' : 
-    ani = FuncAnimation(fig, animate, fargs=(ys,), interval=50, blit=True)
+    ani = FuncAnimation(fig, animate, fargs=(xs, ys,), interval=100, blit=True)
     plt.show()
