@@ -11,7 +11,7 @@ Servo servo;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     pinMode(TrigPin, OUTPUT);
     pinMode(EchoPin, INPUT);
     pinMode(servo_pin, OUTPUT);
@@ -36,10 +36,10 @@ void loop()
     Serial.println("}");
     servo.write(angle);
     angle += angle_increment;
-    if (angle >= 180) {
+    if (angle >= 170) {
         angle_increment = -1;
-    } else if (angle <= 0) {
+    } else if (angle <= 10) {
         angle_increment = 1;
     }
-    delay(100);
+    delay(10);
 }

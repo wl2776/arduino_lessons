@@ -12,10 +12,12 @@ matplotlib.rc('axes',edgecolor='w')
 from matplotlib.animation import FuncAnimation
 
 x_range = [0, 180]
-y_range = [0, 300]
+y_range = [0, 100]
 
 def dress_axes(ax):
     ax.set_facecolor('w')
+    ax.set_xlim(x_range)
+    ax.set_ylim(y_range)
     ax.set_thetamin(x_range[0])
     ax.set_thetamax(x_range[1])
     ax.set_theta_zero_location("E")
@@ -24,14 +26,14 @@ def dress_axes(ax):
 
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1, polar=True)
-xs = np.arange(x_range[0], x_range[1], dtype=np.float)
+xs = np.arange(x_range[0], x_range[1], dtype=np.float) * np.pi / 180.
 ys = np.ones_like(xs, dtype=np.float)
 
 dress_axes(ax)
 
-line, = ax.plot(xs, ys)
+line, = ax.plot(xs, ys, 'ro--')
 
-ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600)
+ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)
 
 def animate(i, xs, ys):
     # jstr = '{{"a": {}, "d": 50}}'.format(i)
@@ -42,7 +44,7 @@ def animate(i, xs, ys):
         print(data)
         index = data['a'] - x_range[0]
         ys[index] = data['d']
-        xs[index] = data['a']
+        xs[index] = data['a'] * np.pi / 180
         line.set_ydata(ys)
         line.set_xdata(xs)
     except json.decoder.JSONDecodeError:
@@ -57,5 +59,5 @@ def animate(i, xs, ys):
 
 
 if __name__ == '__main__' : 
-    ani = FuncAnimation(fig, animate, fargs=(xs, ys,), interval=100, blit=True)
+    ani = FuncAnimation(fig, animate, fargs=(xs, ys, ), interval=0, blit=True)
     plt.show()
