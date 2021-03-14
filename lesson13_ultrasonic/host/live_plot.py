@@ -2,13 +2,15 @@
 
 import json
 import serial
-import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 
+import matplotlib
+matplotlib.rc('axes',edgecolor='w')
+
+import matplotlib.pyplot as plt
 plt.rcParams['xtick.major.pad']='17'
 plt.rcParams["axes.axisbelow"] = False
-matplotlib.rc('axes',edgecolor='w')
+
 from matplotlib.animation import FuncAnimation
 
 x_range = [0, 180]
@@ -24,18 +26,7 @@ def dress_axes(ax):
     ax.set_rlim(y_range)
 
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, polar=True)
-xs = np.arange(x_range[0], x_range[1], dtype=np.float) * np.pi / 180.
-ys = np.ones_like(xs, dtype=np.float)
-
-dress_axes(ax)
-
-line, = ax.plot(xs, ys, 'ro--')
-
-ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)
-
-def animate(i, xs, ys):
+def animate(i, xs, ys, ser):
     # jstr = '{{"a": {}, "d": 50}}'.format(i)
     jstr = ser.readline().strip(b'\r\n ')
 
@@ -59,5 +50,17 @@ def animate(i, xs, ys):
 
 
 if __name__ == '__main__' : 
-    ani = FuncAnimation(fig, animate, fargs=(xs, ys, ), interval=0, blit=True)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, polar=True)
+    xs = np.arange(x_range[0], x_range[1], dtype=np.float) * np.pi / 180.
+    ys = np.ones_like(xs, dtype=np.float)
+
+    dress_axes(ax)
+
+    line, = ax.plot(xs, ys, 'ro--')
+
+    ser = serial.Serial(port='/dev/ttyUSB0', baudrate=115200)
+
+    ani = FuncAnimation(fig, animate, fargs=(xs, ys, ser, ), interval=0, blit=True)
     plt.show()
