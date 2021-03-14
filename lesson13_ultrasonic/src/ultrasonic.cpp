@@ -1,3 +1,11 @@
+/* wiring: 
+
+Arduino D2 ---- Ultrasonic Trig
+Arduino D3 ---- Ultrasonic Echo
+Arduino D13 --- Servo
+
+*/
+
 #include <Arduino.h>
 #include <Servo.h>
 
