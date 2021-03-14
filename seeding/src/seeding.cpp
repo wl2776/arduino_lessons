@@ -27,7 +27,7 @@ DHT dht(DHT_pin, DHTTYPE);
 LiquidCrystal_I2C lcd(PCF8574_ADDR_A21_A11_A01);
 Bounce2::Button button = Bounce2::Button();
 
-unsigned long DHT_last_millis, AD_last_millis;
+unsigned long DHT_last_millis, AD_last_millis, button_pressed_millis;
 bool reading_pot = false;
 int temperature_threshold = 25;
 
@@ -73,7 +73,7 @@ void loop() {
         DHT_last_millis = millis();
     }
 
-    if (reading_pot && AD_last_millis - millis() > 200) {
+    if (reading_pot && millis() - AD_last_millis > 200) {
         int value = analogRead(AD_pin);
         int temperature = map(value, 0, 1023, 20, 40);
 
@@ -83,12 +83,19 @@ void loop() {
         // Serial.print("get ad pin value "); Serial.println(value);
         // Serial.print("voltage = "); Serial.println(voltage);
         AD_last_millis = millis();
+        if (millis() - button_pressed_millis > 30000) {
+            reading_pot = false;
+            lcd.clear();
+        }
     }
 
     button.update();
     if (button.pressed()) {
         reading_pot = !reading_pot;
         lcd.clear();
+        if (reading_pot) {
+            button_pressed_millis = millis();
+        }
     }
     int button_state = digitalRead(button_pin);
     digitalWrite(led_pin, button_state);
